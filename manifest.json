@@ -14,7 +14,7 @@
     },
     {
       "src": "Music.jpg",
-      "type": "image/jpeg",
+      "type": "image/jpg",
       "sizes": "512x512"
     },
     {
@@ -33,3 +33,4 @@
   ]
 
 }
+
