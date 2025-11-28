@@ -8,25 +8,25 @@
 
   "icons": [
     {
-      "src": "Music.jpeg",
-      "type": "image/jpeg",
+      "src": "Music.jpg",
+      "type": "image/jpg",
       "sizes": "192x192"
     },
     {
-      "src": "Music.jpeg",
+      "src": "Music.jpg",
       "type": "image/jpeg",
       "sizes": "512x512"
     },
     {
-      "src": "Music.jpeg",
-      "type": "image/jpeg",
+      "src": "Music.jpg",
+      "type": "image/jpg",
       "sizes": "1024x1024"
     }
   ],
 
   "splash_pages": [
     {
-      "src": "Music.jpeg",
+      "src": "Music.jpg",
       "background_color": "#000000",
       "theme_color": "#000000"
     }
