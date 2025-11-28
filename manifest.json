@@ -1,6 +1,6 @@
 {
-  "name": "my-v0-project",
-  "short_name": "my-v0",
+  "name": "Sonata",
+  "short_name": "Sonata",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#000000",
@@ -33,4 +33,5 @@
   ]
 
 }
+
 
