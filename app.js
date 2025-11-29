@@ -18,6 +18,28 @@ let currentGenre = ""
 let currentMood = ""
 let currentTime = ""
 let pendingUploadFile = null
+let songToEditId = null
+let favorites = [] // New: Favorites list
+let searchTerm = "" // New: Search term
+let showOnlyFavorites = false // New: Favorites filter toggle
+
+// New: Toast Notification Helper
+function showToast(message, type = "success") {
+  const container = document.getElementById("toast-container")
+  const toast = document.createElement("div")
+  toast.className = `toast ${type}`
+  toast.innerHTML = `
+        <span class="toast-icon">${type === "success" ? "✓" : "!"}</span>
+        <span class="toast-message">${message}</span>
+    `
+  container.appendChild(toast)
+
+  // Remove after 3 seconds
+  setTimeout(() => {
+    toast.style.animation = "fadeOut 0.3s ease forwards"
+    setTimeout(() => toast.remove(), 300)
+  }, 3000)
+}
 
 const genres = [
   { id: "classical", name: "Klassik", emoji: "🎻" },
@@ -162,9 +184,11 @@ async function init() {
     setupMoodButtons()
     setupTimeButtons()
     updateStorageInfo()
+    setupSearch() // New
+    setupKeyboardShortcuts() // New
   } catch (error) {
     console.error("Fehler beim Initialisieren der App:", error)
-    alert("Fehler beim Laden der Datenbank. Bitte aktualisieren Sie die Seite.")
+    showToast("Fehler beim Laden der Datenbank", "error")
   }
 }
 
@@ -215,7 +239,7 @@ function handleFileSelect(e) {
 function processFiles(files) {
   const audioFiles = files.filter((f) => f.type.startsWith("audio/"))
   if (audioFiles.length === 0) {
-    alert("Bitte nur Audiodateien auswählen")
+    showToast("Bitte nur Audiodateien auswählen", "error")
     return
   }
 
@@ -245,7 +269,7 @@ async function confirmUpload() {
 
   const songName = document.getElementById("song-name-input").value.trim()
   if (!songName) {
-    alert("Bitte einen Song-Namen eingeben")
+    showToast("Bitte einen Song-Namen eingeben", "error")
     return
   }
 
@@ -256,7 +280,7 @@ async function confirmUpload() {
     const reader = new FileReader()
 
     reader.onerror = () => {
-      alert("Fehler beim Lesen der Datei")
+      showToast("Fehler beim Lesen der Datei", "error")
     }
 
     reader.onload = async (e) => {
@@ -278,16 +302,17 @@ async function confirmUpload() {
         pendingUploadFile = null
         document.getElementById("song-name-input").value = ""
         updateStorageInfo()
+        showToast("Song erfolgreich hochgeladen")
       } catch (error) {
         console.error("Fehler beim Speichern des Songs:", error)
-        alert("Fehler beim Speichern des Songs. Möglicherweise reicht der Speicher nicht aus.")
+        showToast("Fehler beim Speichern. Speicher voll?", "error")
       }
     }
 
     reader.readAsArrayBuffer(pendingUploadFile)
   } catch (error) {
     console.error("Fehler beim Upload:", error)
-    alert("Fehler beim Upload der Datei")
+    showToast("Fehler beim Upload der Datei", "error")
   }
 }
 
@@ -374,7 +399,7 @@ async function createPlaylist() {
   const name = document.getElementById("playlist-name-input").value.trim()
 
   if (!name || !currentGenre) {
-    alert("Bitte Name und Musikrichtung auswählen")
+    showToast("Bitte Name und Musikrichtung auswählen", "error")
     return
   }
 
@@ -393,9 +418,10 @@ async function createPlaylist() {
     playlists.push(playlist)
     renderPlaylists()
     closeModal("create-playlist-modal")
+    showToast("Playlist erstellt")
   } catch (error) {
     console.error("Fehler beim Erstellen der Playlist:", error)
-    alert("Fehler beim Erstellen der Playlist")
+    showToast("Fehler beim Erstellen der Playlist", "error")
   }
 }
 
@@ -446,12 +472,50 @@ function renderPlaylistDetail() {
                 <p>${songCount} Songs • ${genre?.name || "Unbekannt"}</p>
             </div>
         </div>
-        <button class="play-playlist-btn" onclick="playPlaylist()">▶ Playlist abspielen</button>
-        <button class="add-songs-btn" onclick="openAddSongsModal()">+ Songs hinzufügen</button>
+        <button class="playlist-action-btn play" onclick="playPlaylist()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
+            Playlist abspielen
+        </button>
+        <button class="playlist-action-btn add" onclick="openAddSongsModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Songs hinzufügen
+        </button>
+        <button class="playlist-action-btn delete" onclick="deletePlaylist()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Playlist löschen
+        </button>
     `
 
   document.getElementById("playlist-detail-container").innerHTML = detailHTML
   renderPlaylistSongs()
+}
+
+// Delete playlist function
+async function deletePlaylist() {
+  if (!confirm("Playlist wirklich löschen?")) return
+
+  const playlist = playlists.find((p) => p.id === selectedPlaylistId)
+  if (!playlist) return
+
+  try {
+    await deletePlaylistFromDB(selectedPlaylistId)
+    playlists = playlists.filter((p) => p.id !== selectedPlaylistId)
+    selectedPlaylistId = null
+    showToast("Playlist gelöscht")
+    switchSection("playlists-section")
+    renderPlaylists()
+  } catch (error) {
+    console.error("Fehler beim Löschen der Playlist:", error)
+    showToast("Fehler beim Löschen der Playlist", "error")
+  }
 }
 
 function renderPlaylistSongs() {
@@ -482,7 +546,11 @@ function renderPlaylistSongs() {
                 <div class="song-meta">${new Date(song.dateAdded).toLocaleDateString("de-DE")}</div>
             </div>
             <div class="song-actions">
+                <button class="btn-small ${song.isFavorite ? 'active' : ''}" onclick="toggleFavorite('${song.id}')">
+                    ${song.isFavorite ? '❤️' : '🤍'}
+                </button>
                 <button class="btn-small" onclick="playSongFromPlaylist('${song.id}')">▶</button>
+                <button class="btn-small" onclick="editSong('${song.id}')">✏️</button>
                 <button class="btn-small btn-danger" onclick="removeSongFromPlaylist('${song.id}')">✕</button>
             </div>
         </div>
@@ -539,9 +607,10 @@ async function confirmAddToPlaylist() {
     await savePlaylistToDB(playlist)
     renderPlaylistDetail()
     closeModal("add-to-playlist-modal")
+    showToast("Songs hinzugefügt")
   } catch (error) {
     console.error("Fehler beim Hinzufügen von Songs:", error)
-    alert("Fehler beim Hinzufügen von Songs")
+    showToast("Fehler beim Hinzufügen von Songs", "error")
   }
 }
 
@@ -552,9 +621,10 @@ async function removeSongFromPlaylist(songId) {
   try {
     await savePlaylistToDB(playlist)
     renderPlaylistDetail()
+    showToast("Song entfernt")
   } catch (error) {
     console.error("Fehler beim Entfernen des Songs:", error)
-    alert("Fehler beim Entfernen des Songs")
+    showToast("Fehler beim Entfernen des Songs", "error")
   }
 }
 
@@ -569,30 +639,103 @@ function backToPlaylists() {
 function renderSongs() {
   const container = document.getElementById("songs-list")
 
-  if (songs.length === 0) {
-    container.innerHTML = '<div class="empty-message">Noch keine Songs hochgeladen</div>'
+  // Filter songs based on search term and favorites filter
+  let filteredSongs = songs.filter(song =>
+    song.name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  // Apply favorites filter if active
+  if (showOnlyFavorites) {
+    filteredSongs = filteredSongs.filter(song => song.isFavorite)
+  }
+
+  if (filteredSongs.length === 0) {
+    const message = showOnlyFavorites ? 'Keine Favoriten gefunden' : 'Keine Songs gefunden'
+    container.innerHTML = `<div class="empty-message">${message}</div>`
     return
   }
 
-  const sortedSongs = [...songs].sort((a, b) => a.name.localeCompare(b.name))
+  const sortedSongs = [...filteredSongs].sort((a, b) => a.name.localeCompare(b.name))
 
   container.innerHTML = sortedSongs
     .map((song) => {
       const playlist = playlists.find((p) => p.id === song.playlistId)
       return `
-            <div class="song-card">
+            <div class="song-card ${currentSongIndex !== -1 && songs[currentSongIndex]?.id === song.id ? 'playing' : ''}">
                 <div class="song-info">
                     <div class="song-name">${song.name}</div>
                     <div class="song-meta">${playlist ? `Playlist: ${playlist.name}` : "Keine Playlist"}</div>
                 </div>
                 <div class="song-actions">
+                    <button class="btn-small ${song.isFavorite ? 'active' : ''}" onclick="toggleFavorite('${song.id}')">
+                        ${song.isFavorite ? '❤️' : '🤍'}
+                    </button>
                     <button class="btn-small" onclick="playSongFromList('${song.id}')">▶</button>
+                    <button class="btn-small" onclick="editSong('${song.id}')">✏️</button>
                     <button class="btn-small btn-danger" onclick="deleteSong('${song.id}')">✕</button>
                 </div>
             </div>
         `
     })
     .join("")
+}
+
+// Toggle favorites filter
+function toggleFavoritesFilter() {
+  showOnlyFavorites = !showOnlyFavorites
+  const btn = document.getElementById("favorites-filter-btn")
+  if (showOnlyFavorites) {
+    btn.classList.add("active")
+  } else {
+    btn.classList.remove("active")
+  }
+  renderSongs()
+}
+
+// New: Search Setup
+function setupSearch() {
+  const searchInput = document.getElementById("search-input")
+  searchInput.addEventListener("input", (e) => {
+    searchTerm = e.target.value
+    renderSongs()
+  })
+}
+
+// New: Favorites Logic
+async function toggleFavorite(songId) {
+  const song = songs.find(s => s.id === songId)
+  if (song) {
+    song.isFavorite = !song.isFavorite
+    try {
+      await saveSongToDB(song)
+      renderSongs()
+      if (selectedPlaylistId) renderPlaylistSongs()
+      showToast(song.isFavorite ? "Zu Favoriten hinzugefügt" : "Aus Favoriten entfernt")
+    } catch (error) {
+      console.error("Fehler beim Speichern des Favoriten:", error)
+      showToast("Fehler beim Speichern", "error")
+    }
+  }
+}
+
+// New: Keyboard Shortcuts
+function setupKeyboardShortcuts() {
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT") return // Don't trigger when typing
+
+    switch (e.code) {
+      case "Space":
+        e.preventDefault()
+        togglePlay()
+        break
+      case "ArrowRight":
+        nextSong()
+        break
+      case "ArrowLeft":
+        previousSong()
+        break
+    }
+  })
 }
 
 function playSongFromList(songId) {
@@ -616,7 +759,7 @@ function playSongFromPlaylist(songId) {
 function playPlaylist() {
   const playlist = playlists.find((p) => p.id === selectedPlaylistId)
   if (!playlist || playlist.songs.length === 0) {
-    alert("Keine Songs in der Playlist")
+    showToast("Keine Songs in der Playlist", "error")
     return
   }
 
@@ -653,9 +796,10 @@ async function deleteSong(songId) {
     if (currentSongIndex >= songs.length) {
       currentSongIndex = Math.max(0, songs.length - 1)
     }
+    showToast("Song gelöscht")
   } catch (error) {
     console.error("Fehler beim Löschen des Songs:", error)
-    alert("Fehler beim Löschen des Songs")
+    showToast("Fehler beim Löschen des Songs", "error")
   }
 }
 
@@ -679,7 +823,7 @@ function playSong() {
     updatePlayerDisplay()
   } catch (error) {
     console.error("Fehler beim Laden des Songs:", error)
-    alert("Fehler beim Laden des Songs")
+    showToast("Fehler beim Laden des Songs", "error")
   }
 }
 
@@ -730,15 +874,19 @@ function updatePlayerDisplay() {
   const audio = document.getElementById("audio-player")
   const playBtn = document.getElementById("play-btn")
   const playIcon = document.getElementById("play-icon")
+  const vinylRecord = document.getElementById("vinyl-record")
 
   if (song) {
     document.getElementById("player-title").textContent = song.name
     document.getElementById("player-meta").textContent = `${currentSongIndex + 1} / ${songs.length}`
   }
 
+  // Update vinyl animation
   if (isPlaying) {
+    vinylRecord.classList.add("spinning")
     playIcon.innerHTML = '<path d="M6 4h4v16H6V4M14 4h4v16h-4V4z"/>'
   } else {
+    vinylRecord.classList.remove("spinning")
     playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'
   }
 }
@@ -873,6 +1021,46 @@ async function clearAllData() {
   } catch (error) {
     console.error("Fehler beim Löschen der Daten:", error)
     alert("Fehler beim Löschen der Daten")
+  }
+}
+
+// ============================================
+// Edit Song Functionality
+// ============================================
+function editSong(songId) {
+  const song = songs.find((s) => s.id === songId)
+  if (!song) return
+
+  songToEditId = songId
+  document.getElementById("edit-song-name-input").value = song.name
+  document.getElementById("edit-song-modal").classList.add("active")
+}
+
+async function saveSongTitle() {
+  if (!songToEditId) return
+
+  const newName = document.getElementById("edit-song-name-input").value.trim()
+  if (!newName) {
+    alert("Bitte einen Namen eingeben")
+    return
+  }
+
+  const song = songs.find((s) => s.id === songToEditId)
+  if (song) {
+    song.name = newName
+    try {
+      await saveSongToDB(song)
+      renderSongs()
+      if (selectedPlaylistId) {
+        renderPlaylistDetail()
+      }
+      updatePlayerDisplay()
+      closeModal("edit-song-modal")
+      songToEditId = null
+    } catch (error) {
+      console.error("Fehler beim Speichern des Namens:", error)
+      alert("Fehler beim Speichern des Namens")
+    }
   }
 }
 
