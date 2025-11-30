@@ -347,79 +347,102 @@
             filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.4));
         }
 
-        /* Vinyl Record Player */
+        /* Vinyl Record Player - Premium Design */
         .vinyl-container {
-            width: 220px;
-            height: 220px;
-            margin: 0 auto 30px;
+            width: 280px;
+            height: 280px;
+            margin: 20px auto 40px;
             position: relative;
             perspective: 1000px;
+            /* Platter shadow */
+            filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.6));
         }
 
+        /* The Record */
         .vinyl-record {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background: radial-gradient(circle at center,
-                    #1a1a1a 0%,
-                    #0a0a0a 30%,
-                    #000 100%);
+            background-color: #111;
+            /* Realistic grooves */
+            background-image:
+                repeating-radial-gradient(#111 0,
+                    #111 2px,
+                    #222 3px,
+                    #111 4px);
             position: relative;
-            box-shadow:
-                0 20px 50px rgba(0, 0, 0, 0.7),
-                inset 0 0 40px rgba(0, 0, 0, 0.5),
-                inset 0 2px 20px rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease;
+            z-index: 1;
+            transition: transform 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
         }
 
+        /* The Label */
         .vinyl-record::before {
             content: '';
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
-            background: radial-gradient(circle, var(--accent) 0%,
-                    #a0881f 50%,
-                    #D4AF37 100%);
-            box-shadow:
-                0 0 20px rgba(212, 175, 55, 0.4),
-                inset 0 2px 10px rgba(0, 0, 0, 0.3);
+            background: radial-gradient(circle, #D4AF37 0%, #a0881f 70%, #7a6615 100%);
+            border: 2px solid rgba(0, 0, 0, 0.8);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 2;
         }
 
+        /* Label Text/Logo */
         .vinyl-record::after {
-            content: '';
+            content: 'SONATA';
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #000;
-            box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.2);
+            font-family: 'Cinzel', serif;
+            font-size: 10px;
+            font-weight: bold;
+            color: #222;
+            letter-spacing: 1px;
+            z-index: 3;
         }
 
-        /* Groove effect */
-        .vinyl-grooves {
+        /* Spindle Hole */
+        .vinyl-hole {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 6px;
+            background: #000;
+            border-radius: 50%;
+            z-index: 4;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Light Reflection (The "Sheen") - Static Overlay */
+        .vinyl-shine {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background: repeating-radial-gradient(circle at center,
-                    transparent 0px,
-                    transparent 2px,
-                    rgba(255, 255, 255, 0.02) 2px,
-                    rgba(255, 255, 255, 0.02) 3px);
+            background: conic-gradient(from 45deg,
+                    transparent 0deg,
+                    rgba(255, 255, 255, 0.15) 20deg,
+                    transparent 40deg,
+                    transparent 140deg,
+                    rgba(255, 255, 255, 0.15) 160deg,
+                    transparent 180deg,
+                    transparent 360deg);
+            z-index: 5;
             pointer-events: none;
+            mix-blend-mode: overlay;
         }
 
         .vinyl-record.spinning {
-            animation: spin 2s linear infinite;
+            animation: spin 1.8s linear infinite;
         }
 
         @keyframes spin {
@@ -430,6 +453,80 @@
             to {
                 transform: rotate(360deg);
             }
+        }
+
+        /* Premium Tonearm */
+        .tonearm {
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 200px;
+            height: 200px;
+            pointer-events: none;
+            z-index: 10;
+            transform-origin: 155px 45px;
+            /* Pivot point */
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #555, #111);
+            border: 2px solid #222;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* The Arm Shaft */
+        .tonearm-shaft {
+            position: absolute;
+            top: 42px;
+            right: 45px;
+            width: 140px;
+            height: 8px;
+            background: linear-gradient(to bottom, #dcdcdc 0%, #888 50%, #555 100%);
+            /* Chrome look */
+            transform-origin: right center;
+            transform: rotate(15deg);
+            border-radius: 4px;
+        }
+
+        /* Counterweight */
+        .tonearm-counterweight {
+            position: absolute;
+            top: 36px;
+            right: 15px;
+            /* Behind the pivot */
+            width: 30px;
+            height: 20px;
+            background: linear-gradient(90deg, #333, #111, #333);
+            transform: rotate(15deg);
+            border-radius: 2px;
+            border-left: 1px solid #555;
+        }
+
+        /* Headshell (Holds the needle) */
+        .tonearm-headshell {
+            position: absolute;
+            left: -12px;
+            top: -2px;
+            width: 35px;
+            height: 16px;
+            background: #1a1a1a;
+            transform: rotate(-20deg);
+            border-radius: 2px;
+            border-top: 1px solid #444;
+        }
+
+        /* The Needle/Cartridge */
+        .tonearm-headshell::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            bottom: -4px;
+            width: 8px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 1px;
         }
 
         .player-container {
@@ -461,8 +558,10 @@
         .controls {
             display: flex;
             align-items: center;
-            gap: 30px;
+            justify-content: center;
+            gap: 20px;
             margin-bottom: 30px;
+            width: 100%;
         }
 
         .control-btn {
@@ -479,6 +578,14 @@
         .control-btn:hover {
             color: var(--accent);
             transform: scale(1.1);
+        }
+
+        .control-btn.active {
+            color: var(--accent);
+        }
+
+        .control-btn.active svg {
+            filter: drop-shadow(0 0 5px var(--accent));
         }
 
         .control-btn svg {
@@ -992,42 +1099,6 @@
             min-width: 50px;
             text-align: right;
         }
-
-        /* Filter Button */
-        .filter-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            color: var(--text-muted);
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .filter-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--accent);
-            color: var(--text);
-        }
-
-        .filter-btn.active {
-            background: rgba(212, 175, 55, 0.15);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .filter-btn svg {
-            width: 16px;
-            height: 16px;
-        }
-
-        .filter-btn.active svg {
-            fill: var(--accent);
-        }
     </style>
 </head>
 
@@ -1097,7 +1168,15 @@
                     <!-- Vinyl Record -->
                     <div class="vinyl-container">
                         <div class="vinyl-record" id="vinyl-record">
-                            <div class="vinyl-grooves"></div>
+                            <div class="vinyl-hole"></div>
+                        </div>
+                        <div class="vinyl-shine"></div>
+                        <div class="tonearm" id="tonearm">
+                            <div class="tonearm-base"></div>
+                            <div class="tonearm-counterweight"></div>
+                            <div class="tonearm-shaft">
+                                <div class="tonearm-headshell"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -1106,6 +1185,13 @@
                         <div class="player-meta" id="player-meta">Wähle einen Song</div>
                     </div>
                     <div class="controls">
+                        <button class="control-btn" id="shuffle-btn" onclick="toggleShuffle()"
+                            title="Zufallswiedergabe">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </button>
                         <button class="control-btn" onclick="previousSong()" title="Vorheriger Song">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M19 20L9 12l10-8v16zM5 19V5h2v14H5z" />
@@ -1119,6 +1205,13 @@
                         <button class="control-btn" onclick="nextSong()" title="Nächster Song">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M5 4l10 8-10 8V4zM19 5v14h-2V5h2z" />
+                            </svg>
+                        </button>
+                        <button class="control-btn" id="player-favorite-btn" onclick="toggleCurrentFavorite()"
+                            title="Favorit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                             </svg>
                         </button>
                     </div>
@@ -1190,7 +1283,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <circle cx="12" cy="12" r="3" />
                     <path
-                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
                         stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
                 Settings
