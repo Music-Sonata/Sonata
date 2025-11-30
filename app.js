@@ -22,6 +22,8 @@ let songToEditId = null
 let favorites = [] // New: Favorites list
 let searchTerm = "" // New: Search term
 let showOnlyFavorites = false // New: Favorites filter toggle
+let isShuffle = false // New: Shuffle state
+let shuffledQueue = [] // New: Shuffled queue
 
 // New: Toast Notification Helper
 function showToast(message, type = "success") {
@@ -716,6 +718,180 @@ async function toggleFavorite(songId) {
       showToast("Fehler beim Speichern", "error")
     }
   }
+}
+
+// New: Shuffle Logic
+function toggleShuffle() {
+  isShuffle = !isShuffle
+  const btn = document.getElementById("shuffle-btn")
+  if (isShuffle) {
+    btn.classList.add("active")
+    generateShuffledQueue()
+    showToast("Zufallswiedergabe an")
+  } else {
+    btn.classList.remove("active")
+    shuffledQueue = []
+    showToast("Zufallswiedergabe aus")
+  }
+}
+
+function generateShuffledQueue() {
+  // Create a shuffled list of indices from the current context (songs array)
+  let indices = songs.map((_, index) => index)
+  // Fisher-Yates shuffle
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]]
+  }
+  shuffledQueue = indices
+}
+
+// New: Player Favorite Logic
+async function toggleCurrentFavorite() {
+  if (currentSongIndex === -1 || !songs[currentSongIndex]) return
+
+  const song = songs[currentSongIndex]
+  await toggleFavorite(song.id)
+  updatePlayerFavoriteUI()
+}
+
+function updatePlayerFavoriteUI() {
+  const btn = document.getElementById("player-favorite-btn")
+  if (!btn) return
+
+  if (currentSongIndex !== -1 && songs[currentSongIndex]?.isFavorite) {
+    btn.classList.add("active")
+    btn.querySelector("svg").style.fill = "currentColor"
+  } else {
+    btn.classList.remove("active")
+    btn.querySelector("svg").style.fill = "none"
+  }
+}
+
+// Vinyl Animation Helper
+function updateVinylAnimation(playing) {
+  const record = document.getElementById("vinyl-record")
+  const tonearm = document.getElementById("tonearm")
+
+  if (playing) {
+    record.classList.add("spinning")
+    tonearm.classList.add("playing")
+  } else {
+    record.classList.remove("spinning")
+    // Keep tonearm on record if paused, or move back?
+    // User wanted "realistic". Real players keep arm on record when paused (usually).
+    // But for visual feedback, let's keep it "playing" state (on record) but stop spin.
+    // If we want to simulate "Stop", we would remove the class.
+    // For now, let's keep it simple: if playing, arm is on. If paused, arm stays on?
+    // Actually, if I remove .playing class, it rotates back.
+    // Let's make it rotate back only when stopped (which we don't have) or maybe just keep it?
+    // Let's keep it on the record if we are just paused.
+    // But standard UI behavior: pause -> stop animation.
+    // If I remove .playing, it goes back. Let's try that for now.
+    tonearm.classList.remove("playing")
+  }
+}
+
+// Override playSong to handle shuffle and UI updates
+function playSong() {
+  if (currentSongIndex === -1 || !songs[currentSongIndex]) return
+
+  const song = songs[currentSongIndex]
+  const audioPlayer = document.getElementById("audio-player")
+
+  // Create Blob URL if needed (for IndexedDB stored files)
+  // Note: In a real app with large files, we might need to handle Blob URLs carefully to avoid memory leaks
+  // For this demo, we assume song.data is an ArrayBuffer
+  const blob = new Blob([song.data], { type: song.type })
+  const url = URL.createObjectURL(blob)
+
+  audioPlayer.src = url
+  audioPlayer.play()
+    .then(() => {
+      isPlaying = true
+      updatePlayButton()
+      updatePlayerInfo()
+      updatePlayerFavoriteUI()
+      updateVinylAnimation(true)
+
+      // Update active class in lists
+      document.querySelectorAll(".song-card").forEach(card => card.classList.remove("playing"))
+      // This is a bit heavy, but ensures UI sync
+      renderSongs()
+      if (selectedPlaylistId) renderPlaylistSongs()
+    })
+    .catch(error => {
+      console.error("Error playing song:", error)
+      showToast("Fehler beim Abspielen", "error")
+    })
+}
+
+function togglePlay() {
+  const audioPlayer = document.getElementById("audio-player")
+  if (songs.length === 0) return
+
+  if (isPlaying) {
+    audioPlayer.pause()
+    isPlaying = false
+    updateVinylAnimation(false)
+  } else {
+    if (currentSongIndex === -1) currentSongIndex = 0
+    // If we have a src, just play, otherwise load
+    if (audioPlayer.src) {
+      audioPlayer.play()
+      isPlaying = true
+      updateVinylAnimation(true)
+    } else {
+      playSong()
+    }
+  }
+  updatePlayButton()
+}
+
+function nextSong() {
+  if (songs.length === 0) return
+
+  if (isShuffle) {
+    if (shuffledQueue.length === 0) generateShuffledQueue()
+    // Find current index in shuffled queue
+    let currentShuffledIndex = shuffledQueue.indexOf(currentSongIndex)
+    // Move to next
+    if (currentShuffledIndex === -1 || currentShuffledIndex >= shuffledQueue.length - 1) {
+      currentShuffledIndex = 0 // Loop back
+    } else {
+      currentShuffledIndex++
+    }
+    currentSongIndex = shuffledQueue[currentShuffledIndex]
+  } else {
+    if (currentSongIndex < songs.length - 1) {
+      currentSongIndex++
+    } else {
+      currentSongIndex = 0 // Loop back
+    }
+  }
+  playSong()
+}
+
+function previousSong() {
+  if (songs.length === 0) return
+
+  if (isShuffle) {
+    if (shuffledQueue.length === 0) generateShuffledQueue()
+    let currentShuffledIndex = shuffledQueue.indexOf(currentSongIndex)
+    if (currentShuffledIndex <= 0) {
+      currentShuffledIndex = shuffledQueue.length - 1 // Loop back
+    } else {
+      currentShuffledIndex--
+    }
+    currentSongIndex = shuffledQueue[currentShuffledIndex]
+  } else {
+    if (currentSongIndex > 0) {
+      currentSongIndex--
+    } else {
+      currentSongIndex = songs.length - 1 // Loop back
+    }
+  }
+  playSong()
 }
 
 // New: Keyboard Shortcuts
