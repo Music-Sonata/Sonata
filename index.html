@@ -1099,6 +1099,730 @@
             min-width: 50px;
             text-align: right;
         }
+
+        /* Statistics Styles */
+        .stats-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .stats-tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .stats-tab:hover {
+            color: var(--text);
+        }
+
+        .stats-tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .stats-song-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .stats-song-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--border);
+        }
+
+        .stats-rank {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 40px;
+        }
+
+        .stats-song-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .stats-song-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .stats-song-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .trends-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .trend-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .trend-card.highlight {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--accent);
+            grid-column: 1 / -1;
+        }
+
+        .trend-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .trend-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-content {
+            display: none;
+        }
+
+        /* Premium Statistics Enhancements */
+        .premium-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .premium-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(212, 175, 55, 0.2);
+            border-color: rgba(212, 175, 55, 0.5);
+        }
+
+        .chart-container {
+            margin: 20px 0;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bar-label {
+            min-width: 140px;
+            font-size: 13px;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bar-track {
+            flex: 1;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, rgba(212, 175, 55, 0.8), rgba(212, 175, 55, 0.4));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fillBar 0.8s ease-out;
+        }
+
+        @keyframes fillBar {
+            from {
+                width: 0 !important;
+            }
+        }
+
+        .bar-value {
+            margin-left: auto;
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .pie-chart-container {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin: 20px 0;
+        }
+
+        .pie-chart {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            position: relative;
+            background: conic-gradient(from 0deg, var(--accent) 0deg, var(--accent) calc(var(--percentage) * 3.6deg), rgba(255, 255, 255, 0.1) calc(var(--percentage) * 3.6deg), rgba(255, 255, 255, 0.1) 360deg);
+            animation: rotatePie 1s ease-out;
+        }
+
+        @keyframes rotatePie {
+            from {
+                transform: rotate(-90deg);
+            }
+
+            to {
+                transform: rotate(0deg);
+            }
+        }
+
+        .pie-legend {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pie-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+        }
+
+        .pie-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .pie-label {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .pie-percent {
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .timeline-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 120px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+
+        .timeline-bar {
+            flex: 1;
+            background: linear-gradient(to top, rgba(212, 175, 55, 0.6), rgba(212, 175, 55, 0.3));
+            border-radius: 4px 4px 0 0;
+            min-height: 4px;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .timeline-bar:hover {
+            background: linear-gradient(to top, rgba(212, 175, 55, 0.9), rgba(212, 175, 55, 0.6));
+            transform: scaleY(1.05);
+        }
+
+        .timeline-label {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .achievement-badge {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .achievement-badge:hover {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .achievement-badge.locked {
+            opacity: 0.4;
+            filter: grayscale(1);
+        }
+
+        .achievement-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .achievement-title {
+            font-size: 11px;
+            color: var(--text);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .achievement-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .stat-highlight {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .stats-grid-2col {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .stats-grid-3col {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+
+            .stats-grid-2col,
+            .stats-grid-3col {
+                grid-template-columns: 1fr;
+            }
+
+            .pie-chart-container {
+                flex-direction: column;
+            }
+        }
+
+        .stats-content.active {
+            display: block;
+        }
+
+        /* Enhanced Statistics Styles - Premium Dashboard */
+        .stats-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 8px;
+            border-radius: 12px;
+        }
+
+        .stats-tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stats-tab:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stats-tab.active {
+            color: #000;
+            background: var(--accent);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Premium Song Cards with Bar Charts */
+        .stats-song-card {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .stats-song-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(180deg, var(--accent) 0%, rgba(212, 175, 55, 0.3) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .stats-song-card:hover {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border-color: var(--accent);
+            transform: translateX(4px);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.15);
+        }
+
+        .stats-song-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Ranking Badges */
+        .stats-rank {
+            position: relative;
+            font-size: 20px;
+            font-weight: 800;
+            min-width: 50px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--accent) 0%, #b8973f 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats-song-card:nth-child(1) .stats-rank {
+            font-size: 24px;
+        }
+
+        .stats-song-card:nth-child(2) .stats-rank {
+            font-size: 22px;
+            opacity: 0.9;
+        }
+
+        .stats-song-card:nth-child(3) .stats-rank {
+            font-size: 21px;
+            opacity: 0.85;
+        }
+
+        /* Trophy Icons for Top 3 */
+        .stats-rank::before {
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .stats-song-card:nth-child(1) .stats-rank::before {
+            content: '🏆';
+            font-size: 20px;
+        }
+
+        .stats-song-card:nth-child(2) .stats-rank::before {
+            content: '🥈';
+            font-size: 18px;
+        }
+
+        .stats-song-card:nth-child(3) .stats-rank::before {
+            content: '🥉';
+            font-size: 18px;
+        }
+
+        /* Song Info with Enhanced Typography */
+        .stats-song-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .stats-song-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-song-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Horizontal Bar Chart for Play Counts */
+        .play-count-bar {
+            position: relative;
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .play-count-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent) 0%, #b8973f 100%);
+            border-radius: 3px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fillBar 1.5s ease-out;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+        @keyframes fillBar {
+            from {
+                width: 0%;
+            }
+        }
+
+        /* Achievement Badges */
+        .achievement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.1) 100%);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Enhanced Trend Cards */
+        .trends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .trend-card {
+            position: relative;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .trend-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .trend-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(212, 175, 55, 0.2);
+            border-color: var(--accent);
+        }
+
+        .trend-card:hover::before {
+            opacity: 1;
+        }
+
+        .trend-card.highlight {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+            border-color: var(--accent);
+        }
+
+        /* Animated Counters */
+        .trend-value {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent) 0%, #fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            line-height: 1.2;
+            animation: countUp 1s ease-out;
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .trend-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* Circular Progress for Completion Rate */
+        .circular-progress {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 16px;
+        }
+
+        .circular-progress svg {
+            transform: rotate(-90deg);
+        }
+
+        .circular-progress circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .circular-progress .bg {
+            stroke: rgba(255, 255, 255, 0.1);
+        }
+
+        .circular-progress .fg {
+            stroke: var(--accent);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: drawCircle 2s ease-out;
+        }
+
+        @keyframes drawCircle {
+            from {
+                stroke-dashoffset: 339;
+            }
+        }
+
+        /* Time Indicators */
+        .time-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .time-badge.recent {
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--accent);
+        }
+
+        /* Empty State Enhancement */
+        .empty-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .empty-message::before {
+            content: '📊';
+            display: block;
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .trends-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-tabs {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+        }
     </style>
 </head>
 
@@ -1139,6 +1863,7 @@
                 </div>
                 <input type="file" id="file-input" accept="audio/*" multiple>
                 <div class="songs-list" id="songs-list"></div>
+                <!-- Queue Section -->
             </section>
 
             <!-- Playlists Section -->
@@ -1147,6 +1872,7 @@
                 <button class="create-playlist-btn" onclick="openCreatePlaylistModal()">+ Neue Playlist
                     erstellen</button>
                 <div class="playlists-grid" id="playlists-grid"></div>
+                <!-- Queue Section -->
             </section>
 
             <!-- Playlist Detail View -->
@@ -1159,6 +1885,7 @@
                 </button>
                 <div class="playlist-detail" id="playlist-detail-container"></div>
                 <div class="songs-list" id="playlist-songs-list"></div>
+                <!-- Queue Section -->
             </section>
 
             <!-- Player Section -->
@@ -1231,15 +1958,43 @@
                         </div>
                     </div>
                 </div>
+                <!-- Queue Section -->
             </section>
 
+
+            <!-- Statistics Section -->
+            <section id="statistics-section" class="section">
+                <h1 class="page-title">STATISTIKEN</h1>
+
+                <!-- Tabs -->
+                <div class="stats-tabs">
+                    <button class="stats-tab active" onclick="switchStatsTab('trends')">Übersicht</button>
+                    <button class="stats-tab" onclick="switchStatsTab('most-played')">Meistgehörte</button>
+                    <button class="stats-tab" onclick="switchStatsTab('recently-played')">Zuletzt gespielt</button>
+                </div>
+
+                <!-- Trends Tab -->
+                <div class="stats-content active" id="stats-trends">
+                    <div id="listening-trends"></div>
+                </div>
+
+                <!-- Most Played Tab -->
+                <div class="stats-content" id="stats-most-played">
+                    <div id="most-played-list"></div>
+                </div>
+
+                <!-- Recently Played Tab -->
+                <div class="stats-content" id="stats-recently-played">
+                    <div id="recently-played-list"></div>
+                </div>
+            </section>
             <!-- Settings Section -->
             <section id="settings-section" class="section">
                 <h1 class="page-title">EINSTELLUNGEN</h1>
                 <div class="settings-container">
                     <div class="settings-group">
                         <label class="settings-label">VERSION</label>
-                        <p style="font-size: 13px; color: var(--text);">SONATA 2.0.0 (Premium)</p>
+                        <p style="font-size: 13px; color: var(--text);">SONATA 3.0.0 (Premium)</p>
                     </div>
                     <div class="settings-group">
                         <label class="settings-label">SPEICHER NUTZT</label>
@@ -1253,6 +2008,7 @@
                     <button class="modal-btn primary" onclick="clearAllData()" style="width: 100%;">Alle Daten
                         löschen</button>
                 </div>
+                <!-- Queue Section -->
             </section>
         </div>
 
@@ -1278,7 +2034,14 @@
                     <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
                 </svg>
                 Player
+            </button> <button class="nav-btn"
+                onclick="switchSection('statistics-section', this); updateStatisticsDisplay()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M18 20V10M12 20V4M6 20v-6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>Statistiken</span>
             </button>
+
             <button class="nav-btn" onclick="switchSection('settings-section', this)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <circle cx="12" cy="12" r="3" />
