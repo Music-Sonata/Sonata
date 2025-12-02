@@ -17,7 +17,7 @@ let selectedPlaylistId = null
 let currentGenre = ""
 let currentMood = ""
 let currentTime = ""
-let pendingUploadFile = null
+let pendingUploadFiles = [] // Changed to array for multi-upload
 let songToEditId = null
 let favorites = [] // New: Favorites list
 let searchTerm = "" // New: Search term
@@ -177,6 +177,7 @@ async function init() {
   try {
     await initDatabase()
     await loadData()
+    await migrateSongsForStatistics() // Migrate old songs
     setupFileInput()
     setupAudioListener()
     setupVolumeControl()
@@ -245,81 +246,193 @@ function processFiles(files) {
     return
   }
 
-  if (audioFiles.length > 1) {
-    audioFiles.forEach((file, index) => {
-      setTimeout(() => {
-        pendingUploadFile = file
-        openUploadModal()
-      }, index * 300)
-    })
-  } else {
-    pendingUploadFile = audioFiles[0]
-    openUploadModal()
+  // Store all files and open modal once
+  pendingUploadFiles = audioFiles
+  openUploadModal()
+}
+
+// Render playlist selector with multi-select support
+function renderPlaylistSelector(containerId) {
+  const container = document.getElementById(containerId)
+
+  if (playlists.length === 0) {
+    container.innerHTML = '<div class="empty-message">Keine Playlists vorhanden</div>'
+    return
   }
+
+  const sortedPlaylists = [...playlists].sort((a, b) => a.name.localeCompare(b.name))
+
+  container.innerHTML = sortedPlaylists
+    .map(p => {
+      const genre = genres.find(g => g.id === p.genre)
+      return `
+        <div class="playlist-option" data-playlist-id="${p.id}" onclick="togglePlaylistSelection(this)">
+          ${p.name} (${genre?.emoji || "🎵"} ${genre?.name || "Unbekannt"})
+        </div>
+      `
+    })
+    .join("")
+}
+
+// Toggle playlist selection for multi-select
+function togglePlaylistSelection(el) {
+  el.classList.toggle("selected")
 }
 
 function openUploadModal() {
-  if (!pendingUploadFile) return
+  if (pendingUploadFiles.length === 0) return
 
-  document.getElementById("song-name-input").value = pendingUploadFile.name.replace(/\.[^/.]+$/, "")
+  const nameInput = document.getElementById("song-name-input")
+
+  if (pendingUploadFiles.length > 1) {
+    nameInput.value = `${pendingUploadFiles.length} Dateien ausgewählt`
+    nameInput.disabled = true
+    nameInput.placeholder = "Namen werden von Dateien übernommen"
+  } else {
+    nameInput.value = pendingUploadFiles[0].name.replace(/\.[^/.]+$/, "")
+    nameInput.disabled = false
+    nameInput.placeholder = "Song Name eingeben"
+  }
+
   renderPlaylistSelector("upload-playlist-selector")
   document.getElementById("upload-modal").classList.add("active")
 }
 
-async function confirmUpload() {
-  if (!pendingUploadFile) return
+// Helper to read file as ArrayBuffer
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsArrayBuffer(file)
+  })
+}
 
-  const songName = document.getElementById("song-name-input").value.trim()
-  if (!songName) {
+async function confirmUpload() {
+  if (pendingUploadFiles.length === 0) return
+
+  const nameInput = document.getElementById("song-name-input")
+  const singleName = nameInput.value.trim()
+
+  // Validation only for single file if user cleared the input
+  if (pendingUploadFiles.length === 1 && !singleName) {
     showToast("Bitte einen Song-Namen eingeben", "error")
     return
   }
 
   try {
-    const selectedPlaylist = document.querySelector(".playlist-option.selected")
-    const playlistId = selectedPlaylist ? selectedPlaylist.dataset.playlistId : null
+    // Collect all selected playlists (multi-select support)
+    const selectedPlaylists = document.querySelectorAll("#upload-playlist-selector .playlist-option.selected")
+    const selectedPlaylistIds = Array.from(selectedPlaylists).map(el => el.dataset.playlistId)
 
-    const reader = new FileReader()
+    let successCount = 0
 
-    reader.onerror = () => {
-      showToast("Fehler beim Lesen der Datei", "error")
-    }
-
-    reader.onload = async (e) => {
-      const song = {
-        id: Date.now().toString(),
-        name: songName,
-        data: e.target.result, // Blob data
-        type: pendingUploadFile.type,
-        playlistId: playlistId,
-        dateAdded: new Date().toISOString(),
-        size: pendingUploadFile.size,
-      }
-
+    // Process all files
+    for (const file of pendingUploadFiles) {
       try {
+        const buffer = await readFileAsArrayBuffer(file)
+
+        // Use manual name for single file, or filename for multiple
+        const songName = (pendingUploadFiles.length === 1) ? singleName : file.name.replace(/\.[^/.]+$/, "")
+
+        const song = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 5), // Ensure unique ID
+          name: songName,
+          data: buffer,
+          type: file.type,
+          playlistId: null,
+          dateAdded: new Date().toISOString(),
+          size: file.size,
+        }
+
+        // TRANSACTIONAL: First save song to DB
         await saveSongToDB(song)
         songs.push(song)
-        renderSongs()
-        closeModal("upload-modal")
-        pendingUploadFile = null
-        document.getElementById("song-name-input").value = ""
-        updateStorageInfo()
-        showToast("Song erfolgreich hochgeladen")
-      } catch (error) {
-        console.error("Fehler beim Speichern des Songs:", error)
-        showToast("Fehler beim Speichern. Speicher voll?", "error")
+
+        // TRANSACTIONAL: Add to playlists
+        if (selectedPlaylistIds.length > 0) {
+          for (const playlistId of selectedPlaylistIds) {
+            const playlist = playlists.find(p => p.id === playlistId)
+            if (playlist) {
+              // DUPLICATE PREVENTION
+              if (!playlist.songs.includes(song.id)) {
+                playlist.songs.push(song.id)
+                await savePlaylistToDB(playlist)
+              }
+            }
+          }
+        }
+        successCount++
+      } catch (err) {
+        console.error(`Fehler bei Datei ${file.name}:`, err)
       }
     }
 
-    reader.readAsArrayBuffer(pendingUploadFile)
+    renderSongs()
+    renderPlaylists()
+    closeModal("upload-modal")
+    pendingUploadFiles = []
+    nameInput.value = ""
+    nameInput.disabled = false // Reset disabled state
+    updateStorageInfo()
+
+    if (successCount > 0) {
+      const playlistMsg = selectedPlaylistIds.length > 0 ? ` in ${selectedPlaylistIds.length} Playlists` : ""
+      showToast(`${successCount} Song(s) erfolgreich hochgeladen${playlistMsg}`)
+    } else {
+      showToast("Fehler beim Upload", "error")
+    }
+
   } catch (error) {
-    console.error("Fehler beim Upload:", error)
-    showToast("Fehler beim Upload der Datei", "error")
+    console.error("Fehler beim Upload-Prozess:", error)
+    showToast("Fehler beim Upload der Dateien", "error")
   }
 }
 
 // ============================================
-// Playlists Management
+// Statistics Migration & Tracking
+// ============================================
+async function migrateSongsForStatistics() {
+  let updated = false
+
+  for (const song of songs) {
+    if (song.playCount === undefined) {
+      song.playCount = 0
+      song.lastPlayed = null
+      await saveSongToDB(song)
+      updated = true
+    }
+  }
+
+  if (updated) {
+    console.log("Songs migrated with statistics fields")
+  }
+}
+
+async function updateSongStatistics(songId) {
+  const song = songs.find(s => s.id === songId)
+  if (song) {
+    song.playCount = (song.playCount || 0) + 1
+    song.lastPlayed = new Date().toISOString()
+
+    try {
+      await saveSongToDB(song)
+      updateStatisticsDisplay()
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Statistiken:", error)
+    }
+  }
+}
+
+function updateStatisticsDisplay() {
+  const statsSection = document.getElementById("statistics-section")
+  if (!statsSection || !statsSection.classList.contains("active")) return
+
+  renderMostPlayedSongs()
+  renderRecentlyPlayed()
+  renderListeningTrends()
+}
+
 // ============================================
 function openCreatePlaylistModal() {
   currentGenre = ""
@@ -996,7 +1109,12 @@ function playSong() {
     })
 
     isPlaying = true
+
+    // Track statistics
+    updateSongStatistics(song.id)
+
     updatePlayerDisplay()
+    updateVinylAnimation(true)
   } catch (error) {
     console.error("Fehler beim Laden des Songs:", error)
     showToast("Fehler beim Laden des Songs", "error")
@@ -1154,12 +1272,32 @@ function switchSection(sectionId, navBtn = null) {
       "upload-section": 0,
       "playlists-section": 1,
       "player-section": 2,
-      "settings-section": 3,
+      "statistics-section": 3,
+      "settings-section": 4,
     }
     const index = navBtnMap[sectionId]
     if (index !== undefined) {
       document.querySelectorAll(".nav-btn")[index].classList.add("active")
     }
+  }
+}
+
+function switchStatsTab(tabName) {
+  // Remove active from all tabs
+  document.querySelectorAll('.stats-tab').forEach(tab => tab.classList.remove('active'))
+  document.querySelectorAll('.stats-content').forEach(content => content.classList.remove('active'))
+
+  // Add active to selected tab
+  event.target.classList.add('active')
+  document.getElementById(`stats-${tabName}`).classList.add('active')
+
+  // Render appropriate content
+  if (tabName === 'most-played') {
+    renderMostPlayedSongs()
+  } else if (tabName === 'recently-played') {
+    renderRecentlyPlayed()
+  } else if (tabName === 'trends') {
+    renderListeningTrends()
   }
 }
 
@@ -1238,6 +1376,174 @@ async function saveSongTitle() {
       alert("Fehler beim Speichern des Namens")
     }
   }
+}
+
+// ============================================
+// Statistics Rendering Functions
+// ============================================
+function renderMostPlayedSongs() {
+  const container = document.getElementById("most-played-list")
+  if (!container) return
+
+  const sortedByPlays = [...songs]
+    .filter(s => s.playCount > 0)
+    .sort((a, b) => (b.playCount || 0) - (a.playCount || 0))
+    .slice(0, 20)
+
+  if (sortedByPlays.length === 0) {
+    container.innerHTML = '<div class="empty-message">Noch keine Wiedergaben</div>'
+    return
+  }
+
+  const maxPlays = sortedByPlays[0].playCount
+
+  container.innerHTML = sortedByPlays.map((song, index) => {
+    const barWidth = (song.playCount / maxPlays * 100).toFixed(1)
+
+    // Achievement badges
+    let achievement = ''
+    if (song.playCount >= 100) achievement = '🔥 Century Club'
+    else if (song.playCount >= 50) achievement = '⭐ Super Hit'
+    else if (song.playCount >= 20) achievement = '💫 Popular'
+
+    return `
+      <div class="stats-song-card">
+        <div class="stats-rank">#${index + 1}</div>
+        <div class="stats-song-info">
+          <div class="stats-song-name">
+            ${song.name}
+            ${achievement ? `<span class="achievement-badge">${achievement}</span>` : ''}
+          </div>
+          <div class="stats-song-meta">
+            🎵 ${song.playCount} Wiedergaben
+          </div>
+          <div class="play-count-bar">
+            <div class="play-count-fill" style="width: ${barWidth}%"></div>
+          </div>
+        </div>
+        <button class="btn-small" onclick="playSongFromList('${song.id}')">▶</button>
+      </div>
+    `
+  }).join("")
+}
+
+function renderRecentlyPlayed() {
+  const container = document.getElementById("recently-played-list")
+  if (!container) return
+
+  const sortedByRecent = [...songs]
+    .filter(s => s.lastPlayed)
+    .sort((a, b) => new Date(b.lastPlayed) - new Date(a.lastPlayed))
+    .slice(0, 20)
+
+  if (sortedByRecent.length === 0) {
+    container.innerHTML = '<div class="empty-message">Noch keine Wiedergaben</div>'
+    return
+  }
+
+  container.innerHTML = sortedByRecent.map(song => {
+    const lastPlayed = new Date(song.lastPlayed)
+    const timeAgo = getTimeAgo(lastPlayed)
+    const timeDiff = new Date() - lastPlayed
+    const isRecent = timeDiff < 3600000 // Less than 1 hour
+
+    // Time badge styling
+    const timeBadgeClass = isRecent ? 'time-badge recent' : 'time-badge'
+    const timeIcon = isRecent ? '🔥' : '⏰'
+
+    return `
+      <div class="stats-song-card">
+        <div class="stats-song-info">
+          <div class="stats-song-name">
+            ${song.name}
+            ${isRecent ? '<span class="achievement-badge">🔥 Just Played</span>' : ''}
+          </div>
+          <div class="stats-song-meta">
+            <span class="${timeBadgeClass}">${timeIcon} ${timeAgo}</span>
+            <span>🎵 ${song.playCount || 0}x gespielt</span>
+          </div>
+        </div>
+        <button class="btn-small" onclick="playSongFromList('${song.id}')">▶</button>
+      </div>
+    `
+  }).join("")
+}
+
+function renderListeningTrends() {
+  const container = document.getElementById("listening-trends")
+  if (!container) return
+
+  const totalPlays = songs.reduce((sum, s) => sum + (s.playCount || 0), 0)
+  const songsWithPlays = songs.filter(s => s.playCount > 0).length
+  const totalSongs = songs.length
+  const avgPlaysPerSong = songsWithPlays > 0 ? (totalPlays / songsWithPlays).toFixed(1) : 0
+  const completionRate = totalSongs > 0 ? ((songsWithPlays / totalSongs) * 100).toFixed(0) : 0
+
+  const mostPlayedSong = [...songs].sort((a, b) => (b.playCount || 0) - (a.playCount || 0))[0]
+
+  // Calculate circular progress
+  const radius = 54
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (completionRate / 100) * circumference
+
+  container.innerHTML = `
+    <div class="trends-grid">
+      <div class="trend-card">
+        <div class="trend-value">${totalPlays}</div>
+        <div class="trend-label">🎵 Gesamt Wiedergaben</div>
+      </div>
+      <div class="trend-card">
+        <div class="trend-value">${songsWithPlays}</div>
+        <div class="trend-label">📀 Songs gespielt</div>
+      </div>
+      <div class="trend-card">
+        <div class="trend-value">${avgPlaysPerSong}</div>
+        <div class="trend-label">📊 Ø Wiedergaben/Song</div>
+      </div>
+      <div class="trend-card">
+        <div class="circular-progress">
+          <svg width="120" height="120">
+            <circle class="bg" cx="60" cy="60" r="${radius}"></circle>
+            <circle class="fg" cx="60" cy="60" r="${radius}" 
+              stroke-dasharray="${circumference}" 
+              stroke-dashoffset="${offset}"></circle>
+          </svg>
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <div class="trend-value" style="font-size: 28px; margin: 0;">${completionRate}%</div>
+          </div>
+        </div>
+        <div class="trend-label">🎯 Bibliothek erkundet</div>
+      </div>
+      ${mostPlayedSong && mostPlayedSong.playCount > 0 ? `
+        <div class="trend-card highlight">
+          <div class="trend-value" style="font-size: 20px;">👑 ${mostPlayedSong.name}</div>
+          <div class="trend-label">Meistgespielter Song • ${mostPlayedSong.playCount}x wiedergegeben</div>
+        </div>
+      ` : ''}
+    </div>
+  `
+}
+
+function getTimeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000)
+
+  const intervals = {
+    Jahr: 31536000,
+    Monat: 2592000,
+    Woche: 604800,
+    Tag: 86400,
+    Stunde: 3600,
+    Minute: 60
+  }
+
+  for (const [name, secondsInInterval] of Object.entries(intervals)) {
+    const interval = Math.floor(seconds / secondsInInterval)
+    if (interval >= 1) {
+      return `vor ${interval} ${name}${interval !== 1 ? (name === 'Monat' ? 'en' : name === 'Jahr' ? 'en' : 'n') : ''}`
+    }
+  }
+
+  return 'gerade eben'
 }
 
 // ============================================
